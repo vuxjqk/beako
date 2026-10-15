@@ -19,8 +19,9 @@ from src.schemas.auth import (
     VerifyResetOtpRequest,
 )
 from src.schemas.common import MessageResponse
+from src.schemas.invitation import AcceptInvitationRequest
 from src.schemas.user import UserResponse
-from src.services import auth_service, email_service, otp_service
+from src.services import auth_service, email_service, invitation_service, otp_service
 from src.services.otp_service import OtpCooldownError
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -51,6 +52,15 @@ def google_login(data: GoogleLoginRequest, db: DbSession, response: Response):
     tokens = auth_service.issue_tokens(db, user)
     db.commit()
     db.refresh(user)
+    set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
+    return user
+
+
+@router.post("/accept-invitation", response_model=UserResponse)
+def accept_invitation(data: AcceptInvitationRequest, db: DbSession, response: Response):
+    user = invitation_service.accept_invitation(db, data.token, data.password)
+    tokens = auth_service.issue_tokens(db, user)
+    db.commit()
     set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
     return user
 

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from src.core.cookies import ACCESS_TOKEN_COOKIE
 from src.core.security import decode_access_token
-from src.models import User, get_db
+from src.models import User, UserRole, get_db
 
 DbSession = Annotated[Session, Depends(get_db)]
 
@@ -22,3 +22,15 @@ def get_current_user(
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def require_roles(*roles: UserRole):
+    def dependency(current_user: CurrentUser) -> User:
+        if current_user.role not in roles:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Not enough permissions")
+        return current_user
+
+    return dependency
+
+
+AdminUser = Annotated[User, Depends(require_roles(UserRole.ADMIN))]

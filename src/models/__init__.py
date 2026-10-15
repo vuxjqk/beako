@@ -1,5 +1,6 @@
 from src.models.base import Base
 from src.models.database import SessionLocal, engine, get_db
+from src.models.invitation_token import InvitationToken
 from src.models.otp_code import OtpCode, OtpPurpose
 from src.models.password_reset_token import PasswordResetToken
 from src.models.refresh_token import RefreshToken
@@ -10,6 +11,7 @@ __all__ = [
     "SessionLocal",
     "engine",
     "get_db",
+    "InvitationToken",
     "OtpCode",
     "OtpPurpose",
     "PasswordResetToken",

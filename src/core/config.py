@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     OTP_RESEND_COOLDOWN_SECONDS: int = 60
     OTP_MAX_ATTEMPTS: int = 5
     RESET_TOKEN_EXPIRE_MINUTES: int = 15
+    INVITATION_EXPIRE_HOURS: int = 72
+
+    FRONTEND_URL: str = "http://localhost:3000"
 
     RESEND_API_KEY: str = ""
     MAIL_FROM: str = "Beako <onboarding@resend.dev>"
