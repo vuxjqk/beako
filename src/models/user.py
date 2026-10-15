@@ -30,5 +30,9 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true(), nullable=False)
 
+    @property
+    def can_authenticate(self) -> bool:
+        return self.is_active and self.deleted_at is None
+
     def __repr__(self) -> str:
         return f"<User {self.email} ({self.role.value})>"
