@@ -85,6 +85,15 @@ def send_email_verification_otp(to: str, full_name: str, code: str) -> None:
     send_email(to, "[Beako] Mã xác thực email", html_body, text_body)
 
 
+def send_account_deletion_otp(to: str, full_name: str, code: str) -> None:
+    html_body, text_body = _otp_email(
+        full_name,
+        "Bạn đang yêu cầu xoá tài khoản Beako. Sau khi xoá, bạn sẽ không thể đăng nhập bằng tài khoản này nữa.",
+        code,
+    )
+    send_email(to, "[Beako] Mã xác nhận xoá tài khoản", html_body, text_body)
+
+
 def send_password_reset_otp(to: str, full_name: str, code: str) -> None:
     html_body, text_body = _otp_email(full_name, "Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản Beako của bạn.", code)
     send_email(to, "[Beako] Mã đặt lại mật khẩu", html_body, text_body)

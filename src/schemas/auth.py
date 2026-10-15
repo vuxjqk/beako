@@ -15,6 +15,7 @@ def _fits_bcrypt(v: str) -> str:
 
 NormalizedEmail = Annotated[EmailStr, AfterValidator(lambda v: v.lower())]
 Password = Annotated[str, Field(min_length=8), AfterValidator(_fits_bcrypt)]
+FullName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)]
 Otp = Annotated[str, StringConstraints(pattern=rf"^\d{{{settings.OTP_LENGTH}}}$")]
 
 
@@ -28,7 +29,7 @@ class GoogleLoginRequest(CamelModel):
 
 
 class RegisterRequest(CamelModel):
-    full_name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)]
+    full_name: FullName
     email: NormalizedEmail
     password: Password
     confirm_password: str

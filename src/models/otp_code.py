@@ -11,6 +11,7 @@ from src.models.base import Base, UUIDPrimaryKeyMixin
 class OtpPurpose(str, enum.Enum):
     EMAIL_VERIFICATION = "email_verification"
     PASSWORD_RESET = "password_reset"
+    ACCOUNT_DELETION = "account_deletion"
 
 
 class OtpCode(UUIDPrimaryKeyMixin, Base):

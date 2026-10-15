@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Cookie, File, HTTPException, Response, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Cookie, HTTPException, Response, status
 
 from src.api.deps import CurrentUser, DbSession
 from src.core.config import settings
@@ -21,7 +21,7 @@ from src.schemas.auth import (
 from src.schemas.common import MessageResponse
 from src.schemas.invitation import AcceptInvitationRequest
 from src.schemas.user import UserResponse
-from src.services import auth_service, avatar_service, email_service, invitation_service, otp_service
+from src.services import auth_service, email_service, invitation_service, otp_service
 from src.services.otp_service import OtpCooldownError
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -90,25 +90,6 @@ def logout(db: DbSession, response: Response, refresh_token: RefreshTokenCookie 
         auth_service.revoke_refresh_token(db, refresh_token)
         db.commit()
     clear_auth_cookies(response)
-
-
-@router.get("/me", response_model=UserResponse)
-def me(current_user: CurrentUser):
-    return current_user
-
-
-@router.put("/me/avatar", response_model=UserResponse)
-def upload_avatar(
-    current_user: CurrentUser,
-    db: DbSession,
-    file: Annotated[UploadFile, File(description="JPEG, PNG or WebP, max 2 MB")],
-):
-    return avatar_service.update_avatar(db, current_user, file)
-
-
-@router.delete("/me/avatar", response_model=UserResponse)
-def delete_avatar(current_user: CurrentUser, db: DbSession):
-    return avatar_service.remove_avatar(db, current_user)
 
 
 @router.post("/email/send", response_model=MessageResponse, status_code=status.HTTP_202_ACCEPTED)

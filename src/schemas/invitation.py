@@ -1,13 +1,13 @@
-from typing import Annotated, Literal
+from typing import Literal
 
-from pydantic import Field, StringConstraints, model_validator
+from pydantic import Field, model_validator
 
-from src.schemas.auth import NormalizedEmail, Password
+from src.schemas.auth import FullName, NormalizedEmail, Password
 from src.schemas.base import CamelModel
 
 
 class InviteUserRequest(CamelModel):
-    full_name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)]
+    full_name: FullName
     email: NormalizedEmail
     # Admins can't be invited through this flow
     role: Literal["user", "expert"]
