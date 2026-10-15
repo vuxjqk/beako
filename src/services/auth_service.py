@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from src.core.config import settings
+from src.core.google import GoogleIdentity
 from src.core.security import (
     create_access_token,
     generate_secure_token,
@@ -29,6 +30,11 @@ INVALID_CREDENTIALS = HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid email
 INVALID_REFRESH_TOKEN = HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired refresh token")
 EMAIL_TAKEN = HTTPException(status.HTTP_409_CONFLICT, "Email is already registered")
 INVALID_RESET_TOKEN = HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid or expired reset token")
+ACCOUNT_DISABLED = HTTPException(status.HTTP_403_FORBIDDEN, "Account is disabled")
+GOOGLE_LOGIN_FAILED = HTTPException(status.HTTP_401_UNAUTHORIZED, "Unable to sign in with this Google account")
+GOOGLE_ACCOUNT_CONFLICT = HTTPException(
+    status.HTTP_409_CONFLICT, "This email is already linked to a different Google account"
+)
 
 
 def get_active_user_by_email(db: Session, email: str) -> User | None:
@@ -47,8 +53,51 @@ def authenticate(db: Session, email: str, password: str) -> User:
     if user.deleted_at is not None:
         raise INVALID_CREDENTIALS
     if not user.is_active:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Account is disabled")
+        raise ACCOUNT_DISABLED
     return user
+
+
+def login_with_google(db: Session, identity: GoogleIdentity) -> User:
+    user = db.scalar(select(User).where(User.google_id == identity.sub))
+    if user is None:
+        user = db.scalar(select(User).where(User.email == identity.email))
+
+    if user is None:
+        user = User(
+            full_name=identity.name,
+            email=identity.email,
+            google_id=identity.sub,
+            avatar=identity.picture,
+            email_verified_at=datetime.now(timezone.utc),
+        )
+        db.add(user)
+        try:
+            db.flush()
+        except IntegrityError:
+            db.rollback()
+            raise GOOGLE_LOGIN_FAILED
+        return user
+
+    if user.deleted_at is not None:
+        raise GOOGLE_LOGIN_FAILED
+    if not user.is_active:
+        raise ACCOUNT_DISABLED
+    if user.google_id is None:
+        _link_google_account(user, identity)
+    elif user.google_id != identity.sub:
+        raise GOOGLE_ACCOUNT_CONFLICT
+    return user
+
+
+def _link_google_account(user: User, identity: GoogleIdentity) -> None:
+    user.google_id = identity.sub
+    if not user.avatar:
+        user.avatar = identity.picture
+    if user.email_verified_at is None:
+        # Whoever set this password never proved they own the inbox (possible pre-registration
+        # by an attacker), so drop it; Google has now proven ownership.
+        user.password_hash = None
+        user.email_verified_at = datetime.now(timezone.utc)
 
 
 def register(db: Session, data: RegisterRequest) -> User:

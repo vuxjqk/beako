@@ -23,6 +23,10 @@ class LoginRequest(CamelModel):
     password: str = Field(min_length=1)
 
 
+class GoogleLoginRequest(CamelModel):
+    id_token: str = Field(min_length=1)
+
+
 class RegisterRequest(CamelModel):
     full_name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)]
     email: NormalizedEmail

@@ -6,9 +6,11 @@ from fastapi import APIRouter, BackgroundTasks, Cookie, HTTPException, Response,
 from src.api.deps import CurrentUser, DbSession
 from src.core.config import settings
 from src.core.cookies import REFRESH_TOKEN_COOKIE, clear_auth_cookies, set_auth_cookies
+from src.core.google import GoogleTokenError, GoogleUnavailableError, verify_google_id_token
 from src.models import OtpPurpose
 from src.schemas.auth import (
     ForgotPasswordRequest,
+    GoogleLoginRequest,
     LoginRequest,
     RegisterRequest,
     ResetPasswordRequest,
@@ -33,6 +35,22 @@ def login(data: LoginRequest, db: DbSession, response: Response):
     user = auth_service.authenticate(db, data.email, data.password)
     tokens = auth_service.issue_tokens(db, user)
     db.commit()
+    set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
+    return user
+
+
+@router.post("/google", response_model=UserResponse)
+def google_login(data: GoogleLoginRequest, db: DbSession, response: Response):
+    try:
+        identity = verify_google_id_token(data.id_token)
+    except GoogleTokenError:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid Google ID token")
+    except GoogleUnavailableError:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Google sign-in is unavailable")
+    user = auth_service.login_with_google(db, identity)
+    tokens = auth_service.issue_tokens(db, user)
+    db.commit()
+    db.refresh(user)
     set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
     return user
 

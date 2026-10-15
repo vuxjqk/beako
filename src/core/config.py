@@ -25,6 +25,12 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = ""
     MAIL_FROM: str = "Beako <onboarding@resend.dev>"
 
+    GOOGLE_CLIENT_ID: str = ""
+
+    @property
+    def google_client_ids(self) -> list[str]:
+        return [cid.strip() for cid in self.GOOGLE_CLIENT_ID.split(",") if cid.strip()]
+
 
 @lru_cache
 def get_settings() -> Settings:
