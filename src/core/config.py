@@ -15,6 +15,16 @@ class Settings(BaseSettings):
 
     COOKIE_SECURE: bool = False
 
+    OTP_SECRET_KEY: str
+    OTP_LENGTH: int = 6
+    OTP_EXPIRE_MINUTES: int = 10
+    OTP_RESEND_COOLDOWN_SECONDS: int = 60
+    OTP_MAX_ATTEMPTS: int = 5
+    RESET_TOKEN_EXPIRE_MINUTES: int = 15
+
+    RESEND_API_KEY: str = ""
+    MAIL_FROM: str = "Beako <onboarding@resend.dev>"
+
 
 @lru_cache
 def get_settings() -> Settings:

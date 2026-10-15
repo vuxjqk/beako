@@ -1,4 +1,5 @@
 import hashlib
+import hmac
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -55,9 +56,23 @@ def decode_access_token(token: str) -> uuid.UUID | None:
         return None
 
 
-def generate_refresh_token() -> str:
+def generate_secure_token() -> str:
     return secrets.token_urlsafe(64)
 
 
 def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
+
+
+def generate_otp() -> str:
+    return f"{secrets.randbelow(10**settings.OTP_LENGTH):0{settings.OTP_LENGTH}d}"
+
+
+def hash_otp(code: str, *, user_id: uuid.UUID, purpose: str) -> str:
+    # Bind the code to its user and purpose so a hash can't be reused elsewhere
+    message = f"{purpose}:{user_id}:{code}".encode()
+    return hmac.new(settings.OTP_SECRET_KEY.encode(), message, hashlib.sha256).hexdigest()
+
+
+def verify_otp(code: str, code_hash: str, *, user_id: uuid.UUID, purpose: str) -> bool:
+    return hmac.compare_digest(hash_otp(code, user_id=user_id, purpose=purpose), code_hash)
