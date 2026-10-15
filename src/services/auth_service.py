@@ -134,7 +134,7 @@ def rotate_refresh_token(db: Session, refresh_token: str) -> TokenPair:
         raise INVALID_REFRESH_TOKEN
     if token.revoked_at is not None:
         # A rotated token was replayed: assume it was stolen and end every session of this user
-        _revoke_all_user_tokens(db, token.user_id, now)
+        revoke_all_user_tokens(db, token.user_id, now)
         db.commit()
         raise INVALID_REFRESH_TOKEN
     if token.expires_at <= now:
@@ -189,7 +189,7 @@ def reset_password(db: Session, reset_token: str, new_password: str) -> None:
     # Receiving the OTP proved ownership of the inbox
     if user.email_verified_at is None:
         user.email_verified_at = now
-    _revoke_all_user_tokens(db, user.id, now)
+    revoke_all_user_tokens(db, user.id, now)
 
 
 def _invalidate_reset_tokens(db: Session, user_id, now: datetime) -> None:
@@ -200,7 +200,7 @@ def _invalidate_reset_tokens(db: Session, user_id, now: datetime) -> None:
     )
 
 
-def _revoke_all_user_tokens(db: Session, user_id, now: datetime) -> None:
+def revoke_all_user_tokens(db: Session, user_id, now: datetime) -> None:
     db.execute(
         update(RefreshToken)
         .where(RefreshToken.user_id == user_id, RefreshToken.revoked_at.is_(None))

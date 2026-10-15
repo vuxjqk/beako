@@ -1,8 +1,14 @@
 import uuid
 from datetime import datetime
 
+from pydantic import StrictBool
+
 from src.models.user import UserRole
 from src.schemas.base import CamelModel
+
+
+class UpdateUserStatusRequest(CamelModel):
+    is_active: StrictBool
 
 
 class UserResponse(CamelModel):
