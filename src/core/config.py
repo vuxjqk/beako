@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     OTP_MAX_ATTEMPTS: int = 5
     RESET_TOKEN_EXPIRE_MINUTES: int = 15
     INVITATION_EXPIRE_HOURS: int = 72
+    INVITATION_RESEND_COOLDOWN_SECONDS: int = 60
 
     FRONTEND_URL: str = "http://localhost:3000"
 
