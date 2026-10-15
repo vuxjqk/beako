@@ -26,6 +26,11 @@ class Settings(BaseSettings):
 
     FRONTEND_URL: str = "http://localhost:3000"
 
+    MEDIA_ROOT: str = "media"
+    MEDIA_URL: str = "http://localhost:8000/media"
+    AVATAR_MAX_BYTES: int = 2 * 1024 * 1024
+    AVATAR_SIZE: int = 512
+
     RESEND_API_KEY: str = ""
     MAIL_FROM: str = "Beako <onboarding@resend.dev>"
 
